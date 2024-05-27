@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1041831619738",
+    "firebase_url": "https://nenmott-834ad-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "nenmott-834ad",
+    "storage_bucket": "nenmott-834ad.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041831619738:android:09e3af53f30cff236cc323",
+        "android_client_info": {
+          "package_name": "com.example.nenmott"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1041831619738-e0slq3qsf8m2uksnm9s97ftjvickamg5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUgjktjLST-ZMAYJ3nFE8XRYoxrOiYQ0E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1041831619738-e0slq3qsf8m2uksnm9s97ftjvickamg5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
