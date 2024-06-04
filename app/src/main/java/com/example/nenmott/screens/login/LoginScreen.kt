@@ -1,4 +1,4 @@
-package com.example.nenmott.sreens.login
+package com.example.nenmott.screens.login
 
 import android.content.ContentValues
 import android.util.Log
@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -26,12 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.nenmott.screens.login.validateEmail
-import com.example.nenmott.screens.login.validatePassword
+import com.example.nenmott.viewmodels.UserProfileViewModel
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuth
@@ -43,10 +39,10 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    navController: NavController
+    navController: NavController,
+    userProfileViewModel: UserProfileViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -86,8 +82,10 @@ fun LoginScreen(
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
                     isError = emailError != null,
-                    colors = TextFieldDefaults.textFieldColors(
-                        containerColor = Color.White
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        disabledContainerColor = Color.White,
                     )
                 )
                 if (emailError != null) {
@@ -106,8 +104,10 @@ fun LoginScreen(
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     isError = passwordError != null,
-                    colors = TextFieldDefaults.textFieldColors(
-                        containerColor = Color.White
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        disabledContainerColor = Color.White,
                     )
                 )
                 if (passwordError != null) {
@@ -118,7 +118,10 @@ fun LoginScreen(
                         CoroutineScope(Dispatchers.Main).launch {
                             try {
                                 signInWithEmailAndPassword(email, password)
-                                navController.navigate("mainScreen")
+                                userProfileViewModel.setLoginState(true)
+                                navController.navigate("mainScreen"){
+                                    popUpTo("login") { inclusive = true }
+                                }
                                 Log.d(ContentValues.TAG, "SignIn:success")
                             } catch (e: FirebaseAuthInvalidCredentialsException) {
                                 loginError = "Неправильный email или пароль."
@@ -171,9 +174,4 @@ suspend fun signInWithEmailAndPassword(email: String, password: String) {
     }
 }
 
-@Composable
-@Preview
-fun LoginPreview() {
-    val navController = rememberNavController()
-    LoginScreen(navController = navController)
-}
+

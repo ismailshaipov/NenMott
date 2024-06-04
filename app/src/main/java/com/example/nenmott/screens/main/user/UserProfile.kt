@@ -30,20 +30,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.nenmott.viewmodels.UserProfileViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
 fun UserProfileScreen(
+    navController: NavHostController,
     viewModel: UserProfileViewModel = viewModel()
 ) {
     val user = viewModel.user.collectAsState().value
-
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -51,7 +51,7 @@ fun UserProfileScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.25f)
+                .fillMaxHeight(0.30f)
                 .background(Color.Gray),
             contentAlignment = Alignment.Center
         ) {
@@ -135,6 +135,9 @@ fun UserProfileScreen(
                 Button(
                     onClick = {
                         viewModel.signOut()
+                        navController.navigate("login") {
+                            popUpTo("mainScreen") { inclusive = true }
+                        }
                     },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
@@ -200,10 +203,4 @@ fun AchievementsCard() {
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
-}
-
-@Composable
-@Preview(showBackground = true)
-fun UserProfileScreenPreview() {
-    UserProfileScreen()
 }

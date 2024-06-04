@@ -24,9 +24,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.nenmott.screens.main.HomeScreen
+import androidx.navigation.NavHostController
 import com.example.nenmott.screens.main.abc.ABC
+import com.example.nenmott.screens.main.home.HomeScreen
 import com.example.nenmott.screens.main.user.UserProfileScreen
 
 data class BottomNavigationItem(
@@ -35,7 +35,7 @@ data class BottomNavigationItem(
     val unselectedIcon: ImageVector,
     val hasNews: Boolean,
     val badgeCount: Int? = null,
-    val content: @Composable () -> Unit
+    val content: @Composable (navController: NavHostController) -> Unit,
 )
 
 
@@ -59,19 +59,19 @@ val buttonItems = listOf(
         selectedIcon = Icons.Filled.Settings,
         unselectedIcon = Icons.Outlined.Settings,
         hasNews = false,
-        content = { UserProfileScreen() }
+        content = { navController -> UserProfileScreen(navController) }
     )
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomNavigationItemBar() {
-    var selectedItemIndex by rememberSaveable { mutableIntStateOf(1) }
+fun BottomNavigationItemBar(navController: NavHostController) {
+    var selectedItemIndex by rememberSaveable { mutableIntStateOf(2) }
     val selectedItem = buttonItems[selectedItemIndex]
 
     Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(1f)) {
-            selectedItem.content()
+            selectedItem.content(navController)
         }
         NavigationBar {
             buttonItems.forEachIndexed { index, item ->
@@ -103,10 +103,4 @@ fun BottomNavigationItemBar() {
             }
         }
     }
-}
-
-@Composable
-@Preview
-fun Puk(){
-    BottomNavigationItemBar()
 }

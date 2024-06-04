@@ -2,6 +2,7 @@ package com.example.nenmott.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nenmott.data.Module
 import com.example.nenmott.data.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -15,6 +16,12 @@ class UserProfileViewModel : ViewModel() {
 
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> get() = _user
+
+    private val _selectedModule = MutableStateFlow<Module?>(null)
+    val selectedModule: StateFlow<Module?> get() = _selectedModule
+
+    private val _isLoggedIn = MutableStateFlow(false)
+    val isLoggedIn: StateFlow<Boolean> get() = _isLoggedIn
 
     init {
         fetchUserData()
@@ -30,6 +37,7 @@ class UserProfileViewModel : ViewModel() {
                         if (document != null) {
                             val fetchedUser = document.toObject(User::class.java)
                             _user.value = fetchedUser
+                            _isLoggedIn.value = true
                             fetchUserRank()  // Вызов функции для получения рейтинга после загрузки данных пользователя
                         }
                     }
@@ -87,11 +95,21 @@ class UserProfileViewModel : ViewModel() {
         }
     }
 
+    fun selectModule(module: Module) {
+        _selectedModule.value = module
+    }
+
     fun isTaskCompleted(taskId: String): Boolean {
         return _user.value?.completedTasks?.contains(taskId) ?: false
     }
 
     fun signOut() {
         auth.signOut()
+        _user.value = null
+        _isLoggedIn.value = false
+    }
+
+    fun setLoginState(isLoggedIn: Boolean) {
+        _isLoggedIn.value = isLoggedIn
     }
 }

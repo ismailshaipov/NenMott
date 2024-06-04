@@ -54,7 +54,6 @@ fun ABC(viewModel: UserProfileViewModel = viewModel()) {
         "Ц", "ц", "ЦӀ", "цӀ", "Ч", "ч", "ЧӀ", "чӀ", "Ш", "ш", "Щ", "щ", "Ъ", "ъ",
         "Ы", "ы", "Ь", "ь", "Э", "э", "Ю", "ю", "Я", "я", "Ӏ", "ӏ"
     )
-
     val chechenAlphabetPairs = chechenAlphabet.chunked(2)
     var selectedLetter by remember { mutableStateOf<String?>(null) }
 
