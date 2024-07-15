@@ -4,13 +4,15 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -19,6 +21,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -26,6 +31,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +59,7 @@ fun TestScreen(viewModel: TestViewModel = viewModel(), onCancel: () -> Unit) {
     val totalXp by viewModel.totalXp.collectAsState(initial = 0)
     val totalCoins by viewModel.totalCoins.collectAsState(initial = 0)
     val selectedAnswer by viewModel.selectedAnswer.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState(initial = false)
 
     Box(
         modifier = Modifier
@@ -57,46 +67,55 @@ fun TestScreen(viewModel: TestViewModel = viewModel(), onCancel: () -> Unit) {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            IconButton(
-                onClick = { onCancel() },
-                modifier = Modifier.align(Alignment.Start)
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                Icon(imageVector = Icons.Default.Close, contentDescription = "Cancel Test")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LinearProgressIndicator(progress = progress, modifier = Modifier
-                .fillMaxWidth()
-                .height(10.dp)
-                .clip(CircleShape))
-
-            currentQuestion?.let { question ->
-                when (question.type) {
-                    QuestionType.SELECT_WORD -> SelectWordQuestion(question, selectedAnswer, viewModel)
-                    QuestionType.SELECT_IMAGE -> SelectImageQuestion(question, selectedAnswer, viewModel)
-                    QuestionType.COMPLETE_SENTENCE -> CompleteSentenceQuestion(question, selectedAnswer, viewModel)
-                    QuestionType.FORM_SENTENCE -> FormSentenceQuestion(question, selectedAnswer, viewModel)
-                    QuestionType.READ_PASSAGE -> ReadPassageQuestion(question, viewModel)
-                }
-
-                Spacer(modifier = Modifier.height(25.dp))
-
-                Button(
-                    onClick = {
-                        viewModel.submitAnswer()
-                    },
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                IconButton(
+                    onClick = { onCancel() },
+                    modifier = Modifier.align(Alignment.Start)
                 ) {
-                    Text("Проверить")
+                    Icon(imageVector = Icons.Default.Close, contentDescription = "Cancel Test")
                 }
-            } ?: run {
-                CompletionScreen(totalXp, totalCoins)
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                LinearProgressIndicator(
+                    progress = progress,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(10.dp)
+                        .clip(CircleShape)
+                )
+
+                currentQuestion?.let { question ->
+                    println("Начало теста")
+                    when (question.type) {
+                        QuestionType.SELECT_WORD -> SelectWordQuestion(question, selectedAnswer, viewModel)
+                        QuestionType.SELECT_IMAGE -> SelectImageQuestion(question, selectedAnswer, viewModel)
+                        QuestionType.COMPLETE_SENTENCE -> CompleteSentenceQuestion(question, selectedAnswer, viewModel)
+                        QuestionType.FORM_SENTENCE -> FormSentenceQuestion(question, viewModel)
+                        QuestionType.READ_PASSAGE -> ReadPassageQuestion(question, viewModel)
+                    }
+
+                    Spacer(modifier = Modifier.height(25.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.submitAnswer()
+                        },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text("Проверить")
+                    }
+                } ?: run {
+                    println("Показан экран закрывания теста")
+                    CompletionScreen(totalXp, totalCoins)
+                }
             }
         }
     }
@@ -184,15 +203,116 @@ fun CompleteSentenceQuestion(question: Question, selectedAnswer: String?, viewMo
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@SuppressLint("RememberReturnType")
 @Composable
-fun FormSentenceQuestion(question: Question, selectedAnswer: String?, viewModel: TestViewModel) {
-    // TODO: Implement drag and drop functionality for forming sentences
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun FormSentenceQuestion(question: Question, viewModel: TestViewModel = viewModel()) {
+    var userSentence by remember { mutableStateOf(listOf<String>()) }
+    val options = remember { question.options.shuffled().map { it to false }.toMutableStateList() }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(text = question.text, fontSize = 20.sp, modifier = Modifier.padding(bottom = 16.dp))
 
-        // Display the selected words and allow dragging and dropping to form a sentence
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Cyan, RoundedCornerShape(8.dp))
+                .padding(16.dp)
+                .heightIn(min = 100.dp)
+        ) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                userSentence.forEach { word ->
+                    Text(
+                        text = word,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .background(Color.White, RoundedCornerShape(5.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(8.dp)
+                            .clickable {
+                                userSentence = userSentence - word
+                                val index = options.indexOfFirst { it.first == word }
+                                if (index >= 0) options[index] = options[index].first to false
+                            }
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+
+        FlowRow(
+            maxItemsInEachRow = 4,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            options.forEachIndexed { index, pair ->
+                val word = pair.first
+                val selected = pair.second
+
+                Box(
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .background(
+                            if (selected) Color.Gray else Color.Yellow,
+                            RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .clickable {
+                            if (selected) {
+                                userSentence = userSentence - word
+                                options[index] = word to false
+                            } else {
+                                userSentence = userSentence + word
+                                options[index] = word to true
+                            }
+                        }
+                ) {
+                    Text(
+                        text = word,
+                        fontSize = 18.sp,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                val sentence = userSentence.joinToString(" ")
+                if (sentence == question.correctAnswer) {
+                    println("Vivod $sentence ${question.correctAnswer}" )
+                    viewModel.selectAnswer(sentence)
+                }
+                viewModel.submitAnswer()
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Проверить")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = {
+                userSentence = listOf()
+                options.forEachIndexed { index, pair -> options[index] = pair.first to false }
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Сбросить")
+        }
     }
 }
+
 
 @Composable
 fun ReadPassageQuestion(question: Question, viewModel: TestViewModel) {
@@ -209,18 +329,27 @@ fun ReadPassageQuestion(question: Question, viewModel: TestViewModel) {
 
 @Composable
 fun CompletionScreen(totalXp: Int, totalCoins: Int) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Поздравляем! Вы завершили тест.")
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("Полученные награды:")
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("XP: $totalXp")
-        Text("Монеты: $totalCoins")
+    Box {
+        Card(
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.Center),
+            elevation = CardDefaults.cardElevation(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.Cyan,
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text("Поздравляем! Вы завершили тест.")
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Полученные награды:")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("XP: $totalXp")
+                Text("Монеты: $totalCoins")
+            }
+        }
     }
 }
 

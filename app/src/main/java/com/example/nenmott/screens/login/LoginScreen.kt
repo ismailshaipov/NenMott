@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.nenmott.viewmodels.UserProfileViewModel
@@ -174,4 +175,111 @@ suspend fun signInWithEmailAndPassword(email: String, password: String) {
     }
 }
 
+@Composable
+fun LoginScreen2(
 
+) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var loginError by remember { mutableStateOf<String?>(null) }
+    var isFormValid by remember { mutableStateOf(false) }
+
+    fun updateFormValidity() {
+        isFormValid = validateEmail(email) && validatePassword(password)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Card(
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.Center),
+            elevation = CardDefaults.cardElevation(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.Cyan,
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                TextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        emailError = if (validateEmail(it)) null else "Неправильный формат email"
+                        loginError = null
+                        updateFormValidity()
+                    },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = emailError != null,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        disabledContainerColor = Color.White,
+                    )
+                )
+                if (emailError != null) {
+                    Text(text = emailError!!, color = MaterialTheme.colorScheme.error)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                TextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        passwordError = if (validatePassword(it)) null else "Пароль должен быть не менее 6 символов"
+                        loginError = null
+                        updateFormValidity()
+                    },
+                    label = { Text("Password") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = passwordError != null,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        disabledContainerColor = Color.White,
+                    )
+                )
+                if (passwordError != null) {
+                    Text(text = passwordError!!, color = MaterialTheme.colorScheme.error)
+                }
+                Button(
+                    onClick = {
+
+                    },
+                    enabled = isFormValid,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Text("Login")
+                }
+                if (loginError != null) {
+                    Text(
+                        text = loginError!!,
+                        color = Color.Red,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Register")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun LoginScreenPreview(){
+    LoginScreen2()
+}

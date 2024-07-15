@@ -47,7 +47,7 @@ fun UserProfileScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Фото пользователя
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -69,7 +69,6 @@ fun UserProfileScreen(
                 .padding(8.dp)
         ) {
             user?.let {
-                // Имя и фамилия
                 Text(
                     text = "${it.name} ${it.surname}",
                     fontSize = 24.sp,
@@ -77,10 +76,8 @@ fun UserProfileScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                // Уникальный ник
                 Text(it.nickname, fontSize = 16.sp, color = Color.Gray)
 
-                // Дата регистрации
                 val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
                 Text(
                     "Дата регистрации: ${dateFormatter.format(it.registrationDate)}",
@@ -88,7 +85,6 @@ fun UserProfileScreen(
                     color = Color.Gray
                 )
 
-                // Серая черта
                 Divider(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -96,7 +92,6 @@ fun UserProfileScreen(
                     thickness = 1.dp, color = Color.Gray
                 )
 
-                // Статистика
                 Text(
                     "Статистика",
                     fontSize = 20.sp,
@@ -106,7 +101,6 @@ fun UserProfileScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Карты с опытом и рейтингом
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier.fillMaxWidth()
@@ -117,7 +111,6 @@ fun UserProfileScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Достижения
                 Text(
                     "Достижения",
                     fontSize = 20.sp,

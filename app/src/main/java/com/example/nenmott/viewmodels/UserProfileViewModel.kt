@@ -27,7 +27,7 @@ class UserProfileViewModel : ViewModel() {
         fetchUserData()
     }
 
-    private fun fetchUserData() {
+    fun fetchUserData() {
         viewModelScope.launch {
             val currentUser = auth.currentUser
             if (currentUser != null) {

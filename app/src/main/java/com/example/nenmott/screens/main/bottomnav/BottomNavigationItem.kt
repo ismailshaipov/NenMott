@@ -51,7 +51,7 @@ val buttonItems = listOf(
         title = "Home",
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home,
-        hasNews = true,
+        hasNews = false,
         content = { HomeScreen() }
     ),
     BottomNavigationItem(

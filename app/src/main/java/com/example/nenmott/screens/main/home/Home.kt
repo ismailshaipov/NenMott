@@ -7,25 +7,24 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -130,29 +129,6 @@ fun HomeScreen(
     }
 }
 
-
-
-
-
-
-
-
-
-@Composable
-fun TestGrid(tests: List<Test>, onTestSelected: (Test) -> Unit) {
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 128.dp),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(tests) { test ->
-            TestCard(test = test, onTestSelected = onTestSelected)
-        }
-    }
-}
-
-
 @Composable
 fun TopBar(user: User?, selectedModuleTitle: String?, onArrowClick: () -> Unit) {
     Row(
@@ -178,7 +154,7 @@ fun TopBar(user: User?, selectedModuleTitle: String?, onArrowClick: () -> Unit) 
                     .clickable { onArrowClick() }
             )
             Text(
-                text = selectedModuleTitle ?: "Выберите модуль",
+                text = selectedModuleTitle ?: "Select module",
                 fontSize = 24.sp,
                 modifier = Modifier.padding(start = 8.dp)
             )
@@ -194,33 +170,6 @@ fun StatusItem(icon: Int, value: String) {
         Text(text = value, fontSize = 16.sp, color = Color.Black)
     }
 }
-
-@Composable
-fun ModuleCard(module: Module, onModuleSelected: (Module) -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clickable(enabled = module.active) {
-                onModuleSelected(module)
-            },
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (module.active) Color.Green else Color.Gray
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(text = module.title, fontSize = 20.sp, color = Color.White)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = module.description, fontSize = 14.sp, color = Color.White)
-        }
-    }
-}
-
 @Composable
 fun ModuleSelectionCard(modules: List<Module>, onModuleSelected: (Module) -> Unit, onDismiss: () -> Unit) {
     Card(
@@ -271,17 +220,17 @@ fun ModuleSelectionCard(modules: List<Module>, onModuleSelected: (Module) -> Uni
 }
 
 @Composable
-fun TestCard(test: Test, onTestSelected: (Test) -> Unit) {
+fun ModuleCard(module: Module, onModuleSelected: (Module) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clickable(enabled = test.active) {
-                onTestSelected(test)
+            .clickable(enabled = module.active) {
+                onModuleSelected(module)
             },
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (test.active) Color.Green else Color.Gray
+            containerColor = if (module.active) Color.Green else Color.Gray
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -289,8 +238,42 @@ fun TestCard(test: Test, onTestSelected: (Test) -> Unit) {
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Text(text = test.title, fontSize = 20.sp, color = Color.White)
+            Text(text = module.title, fontSize = 20.sp, color = Color.White)
             Spacer(modifier = Modifier.height(8.dp))
+            Text(text = module.description, fontSize = 14.sp, color = Color.White)
+        }
+    }
+}
+
+@Composable
+fun TestGrid(tests: List<Test>, onTestSelected: (Test) -> Unit) {
+    val positionPattern = listOf(-1, 1, -1, 1)
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        items(tests) { test ->
+            val index = tests.indexOf(test)
+            Box(
+                modifier = Modifier
+                    .offset(x = (positionPattern[index % positionPattern.size] * 40).dp)
+                    .clickable(enabled = test.active) {
+                        onTestSelected(test)
+                    }
+                    .size(100.dp)
+                    .background(
+                        color = if (test.active) Color.Green else Color.Gray,
+                        shape = CircleShape
+                    )
+                    .border(2.dp, Color.Gray, shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(imageVector = ImageVector.vectorResource(R.drawable.baseline_star_24), contentDescription = "Test icon" )
+            }
         }
     }
 }

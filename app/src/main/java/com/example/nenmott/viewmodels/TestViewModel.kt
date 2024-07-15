@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.nenmott.data.Module
 import com.example.nenmott.data.Question
 import com.example.nenmott.data.Test
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class TestViewModel : ViewModel() {
+    private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
     private val mediaPlayer = MediaPlayer()
 
@@ -64,61 +66,33 @@ class TestViewModel : ViewModel() {
         reviewMode = false
     }
     private fun loadQuestions(test: Test, module: Module) {
-        firestore.collection("modules")
-            .document(test.moduleId)
-            .collection("tests")
-            .document(test.id)
-            .collection("questions")
-            .get()
-            .addOnSuccessListener { result ->
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val result = firestore.collection("modules")
+                    .document(test.moduleId)
+                    .collection("tests")
+                    .document(test.id)
+                    .collection("questions")
+                    .get()
+                    .await()
+
                 allQuestions = result.toObjects(Question::class.java)
                 if (allQuestions.isNotEmpty()) {
                     _currentQuestion.value = allQuestions.first()
                     _progress.value = 0f
                     incorrectQuestionsList.clear()
+                } else {
+                    println("No questions found for test: ${test.id}")
                 }
+            } catch (e: Exception) {
+                println("Error loading questions: ${e.message}")
+            } finally {
+                _isLoading.value = false
             }
-            .addOnFailureListener {
-                // Handle error
-            }
+        }
     }
-//    private fun loadQuestions(test: Test) {
-//        viewModelScope.launch {
-//            _isLoading.value = true
-//            try {
-//                val questions = getQuestionsForTest(test.moduleId, test)
-//                allQuestions = questions
-//                if (allQuestions.isNotEmpty()) {
-//                    _currentQuestion.value = allQuestions.first()
-//                    _progress.value = 0f
-//                    incorrectQuestionsList.clear()
-//                    reviewMode = false
-//                } else {
-//                    println("No questions found for test: ${test.id}")
-//                }
-//            } catch (e: Exception) {
-//                // Обработка ошибки
-//                println("Error loading questions: ${e.message}")
-//            } finally {
-//                _isLoading.value = false
-//            }
-//        }
-//    }
-//
-//    private suspend fun getQuestionsForTest(moduleId: String, test: Test): List<Question> = try {
-//        val snapshot = firestore.collection("modules")
-//            .document(moduleId)
-//            .collection("tests")
-//            .document(test.id)
-//            .collection("questions")
-//            .get()
-//            .await()
-//        snapshot.documents.map { document ->
-//            document.toObject(Question::class.java)!!
-//        }
-//    } catch (e: Exception) {
-//        emptyList()
-//    }
+
 
     fun submitAnswer() {
         val currentQuestion = _currentQuestion.value ?: return
@@ -131,6 +105,8 @@ class TestViewModel : ViewModel() {
         if (answer != currentQuestion.correctAnswer) {
             println("Answer is incorrect, adding to incorrectQuestionsList")
             incorrectQuestionsList.add(currentQuestion)
+        }else{
+            _progress.value = 1f/allQuestions.size
         }
 
         _selectedAnswer.value = null
@@ -162,12 +138,39 @@ class TestViewModel : ViewModel() {
             null
         }
     }
+    private fun updateUserXPAndCoins(xp: Int, coin: Int) {
+        viewModelScope.launch {
+            try {
+                val currentUser = auth.currentUser
+                currentUser?.let {
+                    val userId = it.uid
+                    val userRef = firestore.collection("users").document(userId)
+
+                    firestore.runTransaction { transaction ->
+                        val userSnapshot = transaction.get(userRef)
+                        val currentXp = userSnapshot.getLong("xp") ?: 0
+                        val currentCoins = userSnapshot.getLong("coins") ?: 0
+
+                        val newXp = currentXp + xp
+                        val newCoins = currentCoins + coin
+
+                        transaction.update(userRef, "xp", newXp)
+                        transaction.update(userRef, "coins", newCoins)
+                    }.await()
+                }
+            } catch (e: Exception) {
+                println("Error updating user XP and coins: ${e.message}")
+            }
+        }
+    }
+
 
     private fun finishTest() {
         _currentTest.value?.let {
             println("Test completed, awarding XP and coins")
             _totalXp.value += it.xp
             _totalCoins.value += it.coin
+            updateUserXPAndCoins(it.xp, it.coin)
             markTestAsCompleted(it)
         }
         _currentQuestion.value = null
@@ -239,7 +242,7 @@ class TestViewModel : ViewModel() {
         loadAllData()
     }
 
-    fun loadAllData() {
+    private fun loadAllData() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -259,6 +262,7 @@ class TestViewModel : ViewModel() {
                 _modules.value.forEach {
                     println("Module: ${it.title}, Tests: ${it.tests.size}")
                 }
+                println("Все скачено")
             } catch (e: Exception) {
                 println("Error loading all data: ${e.message}")
             } finally {
@@ -299,4 +303,6 @@ class TestViewModel : ViewModel() {
             emptyList()
         }
     }
+
 }
+

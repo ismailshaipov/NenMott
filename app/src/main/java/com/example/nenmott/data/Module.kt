@@ -4,9 +4,9 @@ data class Module(
     val id: String = "",
     val title: String = "",
     val description: String = "",
-    val progress: Float = 0f,
+    var progress: Float = 0f,
     var tests: List<Test> = listOf(),
-    val active: Boolean = false,
+    var active: Boolean = false,
     val completed: Boolean = false
 )
 data class Test(
@@ -14,7 +14,7 @@ data class Test(
     val title: String = "",
     val active: Boolean = false,
     val moduleId: String = "",
-    val completed: Boolean = false,
+    var completed: Boolean = false,
     val xp: Int = 0,
     val coin: Int = 0,
     var questions: List<Question> = listOf()
@@ -26,8 +26,7 @@ data class Question(
     val imageUrl: String? = null,
     val correctAnswer: String = "",
     val options: List<String> = listOf(),
-    val type: QuestionType = QuestionType.SELECT_IMAGE,
-    val completed: Boolean = false
+    val type: QuestionType = QuestionType.SELECT_IMAGE
 )
 enum class QuestionType {
     SELECT_WORD,
