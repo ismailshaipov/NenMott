@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MyApp(){
     Box {
-        NavigationHost()
+        NavтigationHost()
         //InternetStatusIndicator()
     }
 }
